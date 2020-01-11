@@ -10,12 +10,14 @@
  * This model is distributed in the hope that it will be useful.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "utils.h"
 #include "package.h"
 #include "keycore.h"
 #include "cmd_handler.h"
+#include "config.h"
 
 /*
  * The Get command.
@@ -429,49 +431,69 @@ void keycore_cmd_handler(void)
 {
     uint8_t code;
     uint8_t checksum;
+    const uint8_t seq_max = 4;
+    uint8_t seq[seq_max];
     
     while (1)
     {
-        // Waiting for receiving a command code (1 byte)
-        // and checksum (1 byte).
-        kreceivew(buffer, 2);   
-        code = buffer[0];
-        checksum = ~code;
+        kreceivew(buffer, 1);
+        for (int i = 1; i < seq_max; i++)  {
+            seq[i-1] = seq[i];
+        }   
+        seq[3] = buffer[0];
         
-        if (checksum != buffer[1]) {  // Checksum is not correct.
-            ksendc(NACK);
-            continue;
+        for (int i = 0; i < seq_max-1; i++) {
+            uint8_t checksum = ~seq[i+1];
+            if (seq[i] == checksum) {
+                code = seq[i];
+                seq[i] = 0x00;
+                seq[i+1] = 0x00;
+                goto handler;
+            }
         }
         
+        continue;
+        
+handler:       
         switch (code) {
         case KEYCORE_CMD_GET:
+			      debug("INFO: GET_COMMAND is called\n");
             handle_get();
             break;
         case KEYCORE_CMD_GET_VERSION:
+			      debug("INFO: GET_VERSION_COMMAND is called\n");
             handle_get_version();
             break;
         case KEYCORE_CMD_READ_PRO_STATUS:
+			      debug("INFO: READ_PRO_STATUS_COMMAND is called\n");
             handle_read_protection_status();
             break;
         case KEYCORE_CMD_GET_ID:
+			      debug("INFO: GET_ID_COMMAND is called\n");
             handle_get_id();
             break;
         case KEYCORE_CMD_READ_DEVICE_PK:
+			      debug("INFO: READ_DEV_PUBLIC_KEY is called\n");
             handle_read_device_pk();
             break;
         case KEYCORE_CMD_READ_SEC_HASHCODE:
+			      debug("INFO: READ_SEC_HASH_COMMAND is called\n");
             handle_read_hashcode();
             break;
         case KEYCORE_CMD_READ_SEC_PK:
+			      debug("INFO: READ_SEC_PUBLIC_KEY_COMMAND is called\n");
             handle_read_sec_pk();
             break;
         case KEYCORE_CMD_READ_SEC_SIGNATURE:
+			      debug("INFO: READ_SEC_SIGNATURE_COMMAND is called\n");
             handle_read_sec_signature();
             break;
         case KEYCORE_CMD_GENERATE:
+			      debug("INFO: GENERATE_COMMAND is called\n");
             handle_generate();
             break;
         case KEYCORE_CMD_SEC_SIGN:
+			      debug("INFO: SEC_SIGN_COMMAND is called\n");
             handle_sec_sign();
             break;
         default:

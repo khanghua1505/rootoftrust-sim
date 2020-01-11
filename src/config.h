@@ -13,6 +13,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdio.h>
+
 #ifndef __packed
 #define __packed	__attribute__((packed))
 #endif  // __packed
@@ -30,5 +32,7 @@
 #endif  // STATIC_ASSERT
 
 #define KEYCORE_CHECK(module_enabled)	(module_enabled)
+
+#define debug(fmt...)	printf(fmt)
 
 #endif // CONFIG_H

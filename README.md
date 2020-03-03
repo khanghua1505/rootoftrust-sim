@@ -1,4 +1,4 @@
-# Rootoftrus Simulation
+# RootOfTrust Simulation
 
 ## Build
 ```bash

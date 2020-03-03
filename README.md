@@ -9,3 +9,13 @@ cd build
 cmake -DINTERFACE=Ethernet|Serial ..
 make
 ```
+## Run
+### Serial Interface
+```bash
+./rootoftrust_sim PORTNAME KEYFILE
+```
+### Ethernet Interface
+```bash
+./rootoftrust_sim KEYFILE
+```
+

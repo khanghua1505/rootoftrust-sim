@@ -20,7 +20,21 @@
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
-    
+
+#define DEV_PUBKEY_SIZE     (32)
+#define DEV_PRVKEY_SIZE     (64)
+#define SEC_PUBKEY_SIZE     (32)
+#define SEC_PRVKEY_SIZE     (64)
+#define SEC_HASH_SIZE       (64)
+#define SEC_SIGNA_SIZE      (64)
+
+extern uint8_t dev_pub_key[32];
+extern uint8_t dev_prv_key[64];
+extern uint8_t sec_pub_key[64];
+extern uint8_t sec_prv_key[64];
+extern uint8_t sec_hash[64];
+extern uint8_t sec_signa[64];
+
 #define VERSION(major, minor)           ( (major << 5) | minor )
 #define CERBERUS_KEYCORE_VERSION        ( VERSION(0,1))
     
@@ -28,30 +42,6 @@ extern "C" {
 #define CERBERUS_KEYCORE_PID            PID(0x04, 0xEE)
     
 typedef uint32_t keycore_status_t;
-    
-typedef  struct  __packed
-{
-    uint8_t value[32];
-}
-keycore_keys_pk_t;
-
-typedef struct __packed
-{
-    uint8_t value[64];
-}
-keycore_keys_sk_t;
-
-typedef struct __packed
-{
-    uint8_t value[64];
-}
-keycore_keys_hashcode_t;
-
-typedef struct __packed
-{
-    uint8_t value[64];
-}
-keycore_keys_signature_t;
 
 #define KEYCORE_SEG_START       0x00
 #define KEYCORE_SEG_NEXT        0x01
@@ -73,7 +63,7 @@ keycore_data_segment_t;
   * @return true  If the security keys is valid.
   * @return false If the security keys is not available.
   */
-bool keycore_keys_sec_key_isvalid(void);
+bool keycore_seckeys_isvalid(void);
 
 /**
   * @brief        This function is used to check the hashcode is available.
@@ -81,20 +71,20 @@ bool keycore_keys_sec_key_isvalid(void);
   * @retval true  If the hashcode is valid.
   * @retval false if the hashcode is not available.
   */
-bool keycore_keys_hashcode_isvalid(void);
+bool keycore_hashcode_isvalid(void);
       
-void keycore_keys_payload_init(void);
+void keycore_payload_init(void);
 
-void keycore_keys_payload_append(const uint8_t *buffer, uint8_t size);
+void keycore_payload_append(const uint8_t *buffer, uint8_t size);
 
-void keycore_keys_payload_final(void);
+void keycore_payload_final(void);
 
 void keycore_signature_msg_init(void);
 
 void keycore_signature_msg_append(const uint8_t *buffer, 
              uint8_t size);
 
-void keycore_signature_msg_final(keycore_keys_signature_t *signature);
+void keycore_signature_msg_final(uint8_t *signature);
 
 #ifdef __cplusplus
 }

@@ -9,31 +9,53 @@
  *
  * This model is distributed in the hope that it will be useful.
  */
-
+ 
+#include <stdio.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include "serial.h"
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include "utils.h"
 
-void ksendc(uint8_t c)
+static log_write_t _write;
+
+static const char *level_names[] = {
+  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+};
+
+#ifdef LOG_USE_COLOR
+static const char *level_colors[] = {
+  "\x1b[94m", "\x1b[36m", "\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"
+};
+#endif  // LOG_USE_COLOR
+
+void log_io_set(log_write_t writecb)
 {
-    kputc(c);
+  _write = writecb;
 }
 
-uint8_t kreceivec(void)
+void log_msg(int level, const char* fmt, ...)
 {
-    return (uint8_t) kgetc();
-}
+  if (level >= MSG_TOTAL) {
+    return;
+  }
+  
+  va_list args;
+  static uint8_t buffer[256];
+  
+#ifdef LOG_USE_COLOR
+  snprintf(buffer, 256, "%s%-8s \x1b[0m", level_colors[level], 
+           level_names[level]);
+  _write(buffer, strlen(buffer));
+#else
+  snprintf(buffer, 256, "%-8s \x1b[0m", level_names[level]);
+  _write(buffer, strlen(buffer));
+#endif  // LOG_USE_COLOR
 
-void ksendw(const uint8_t *buffer, uint8_t size)
-{
-    for (int i = 0; i < size; i++) {
-        ksendc(buffer[i]);
-    }
-}
-
-void kreceivew(uint8_t *buffer, uint8_t size)
-{
-    for (int i = 0; i < size; i++) {
-        buffer[i] = (uint8_t) kreceivec();
-    }
+  va_start(args, fmt);
+  vsnprintf(buffer, 256, fmt, args);
+  va_end(args);
+  
+  _write(buffer, strlen(buffer));
 }

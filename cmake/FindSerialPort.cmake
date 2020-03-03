@@ -38,7 +38,7 @@ else()
         endif()  # SERIALPORT_INCLUDE_DIR AND SERIALPORT_LIBRARIES
 
         if (SERIALPORT_FOUND)
-            if (!Serialport_FIND_QUIETLY)
+            if (Serialport_FIND_REQUIRED)
                 message(STATUS "Found libserialport: ${SERIALPORT_LIBRARY}")
             endif()  # NOT SERIALPORT_FIND_QUIETLY
         else()

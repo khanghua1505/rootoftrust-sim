@@ -9,59 +9,33 @@
  *
  * This model is distributed in the hope that it will be useful.
  */
-
-#ifndef UTILS_H__
-#define UTILS_H__
+ 
+#ifndef _ROOT_OF_TRUST_UTILS_H_
+#define _ROOT_OF_TRUST_UTILS_H_
 
 #include <stdint.h>
-#include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif  // __cplusplus
+#define GET32(a, b, c, d)  ( ((a) << 24) | ((b) << 16) |  \
+                             ((c) << 8) | ((d)) )
+                             
+#define LOG_USE_COLOR   1
+ 
+enum { MSG_TRACE, MSG_DEBUG, MSG_INFO, MSG_WARN, MSG_ERROR, MSG_FATAL, MSG_TOTAL };
 
-#define GET32(a, b, c, d)  ( ((a) << 24) | ((b) << 16) | ((c) << 8) | ((d)) )
+#define msg_trace(...)  log_msg(MSG_TRACE, __VA_ARGS__)
+#define msg_debug(...)  log_msg(MSG_DEBUG, __VA_ARGS__)
+#define msg_info(...)   log_msg(MSG_INFO, __VA_ARGS__)
+#define msg_warn(...)   log_msg(MSG_WARN, __VA_ARGS__)
+#define msg_error(...)  log_msg(MSG_ERROR, __VA_ARGS__)
+#define msg_fatal(...)  log_msg(MSG_FATAL, __VA_ARGS__)
 
-/**
-  * @brief This function sends a character to STDOUT.
-  *
-  * @param c[in]    An input character.
-  *
-  * @return None.
-  */
-void ksendc(uint8_t c);
+typedef void (*log_write_t)(const uint8_t *buffer, size_t len);
 
-/**
-  * @brief This function receives a character from STDIN.
-  *
-  * @param None.
-  *
-  * @return The received character.
-  */
-uint8_t kreceivec(void);
+void log_io_set(log_write_t writecb);
 
-/**
-  * @brief This function sends a string (or byte array) to STDOUT.
-  *
-  * @param buffer[in]    An input string or (byte array).
-  * @param buffer[in]    The size of buffer.
-  *
-  * @return None.
-  */
-void ksendw(const uint8_t *buffer, uint8_t size);
+void log_msg(int level, const char* fmt, ...);
 
-/**
-  * @brief This function sends a string (or byte array) to STDOUT.
-  *
-  * @param buffer[in,out]    The buffer to store received datas.
-  * @param buffer[in]        Number of bytes to shall be read.
-  *
-  * @return None.
-  */
-void kreceivew(uint8_t *buffer, uint8_t size);
+#endif  // _ROOT_OF_TRUST_UTILS_H_
 
-#ifdef __cplusplsu
-}
-#endif  // __cplusplus
 
-#endif  // UTILS_H__
+

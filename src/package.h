@@ -21,8 +21,8 @@
 extern "C" {
 #endif  // __cplusplus
     
-#define ACK     0x79
-#define NACK    0x1F
+#define ACK     ((uint8_t) 0x79)
+#define NACK    ((uint8_t) 0x1F)
   
 typedef struct __packed
 {

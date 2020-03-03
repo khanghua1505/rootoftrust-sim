@@ -9,3 +9,13 @@
  *
  * This model is distributed in the hope that it will be useful.
  */
+
+#include <stdint.h>
+#include <stddef.h>
+
+uint8_t dev_pub_key[32]   = {0};
+uint8_t dev_prv_key[64]   = {0};
+uint8_t sec_pub_key[64]   = {0};
+uint8_t sec_prv_key[64]   = {0};
+uint8_t sec_hash[64]      = {0};
+uint8_t sec_signa[64]     = {0};

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "utils.h"
+#include "io.h"
 #include "package.h"
 #include "keycore.h"
 #include "cmd_handler.h"
@@ -46,10 +47,9 @@ static const get_return_pkt_t get_return_pkt =
 
 static void handle_get(void) 
 {
-  ksendc(ACK);                            
-  ksendw((uint8_t *) &get_return_pkt,     
-          sizeof(get_return_pkt));       
-  ksendc(ACK);                            
+  __write_byte(ACK);                            
+  __write((uint8_t *) &get_return_pkt, sizeof(get_return_pkt));       
+  __write_byte(ACK);                            
 }
 
 /*
@@ -65,10 +65,10 @@ static const get_version_return_pkt_t get_version_return_pkt =
 
 static void handle_get_version(void)
 {
-  ksendc(ACK);                               
-  ksendw((uint8_t *) &get_version_return_pkt, 
+  __write_byte(ACK);                               
+  __write((uint8_t *) &get_version_return_pkt, 
           sizeof(get_version_return_pkt));    
-  ksendc(ACK);                               
+  __write_byte(ACK);                               
 }
 
 /*
@@ -96,10 +96,9 @@ static const get_id_return_pkt_t get_id_return_pkt =
 
 static void handle_get_id(void) 
 {
-  ksendc(ACK);                            
-  ksendw((uint8_t *) &get_id_return_pkt,  
-          sizeof(get_id_return_pkt));    
-  ksendc(ACK);                           
+  __write_byte(ACK);                            
+  __write((uint8_t *) &get_id_return_pkt, sizeof(get_id_return_pkt));    
+  __write_byte(ACK);                           
 }
 
 /*
@@ -109,15 +108,12 @@ static void handle_get_id(void)
  * from the Keycore.
  */
 
-extern const keycore_keys_pk_t keycore_dev_pub_key;
-
 static void handle_read_device_pk(void)
 {
-  ksendc(ACK);                               
-  ksendc(sizeof(keycore_keys_pk_t) - 1);     
-  ksendw((uint8_t *) &keycore_dev_pub_key, 
-          sizeof(keycore_dev_pub_key));
-  ksendc(ACK);                                
+  __write_byte(ACK);                               
+  __write_byte(DEV_PUBKEY_SIZE - 1);     
+  __write((uint8_t *) dev_pub_key, sizeof(dev_pub_key));
+  __write_byte(ACK);                                
 }
 
 /*
@@ -129,28 +125,25 @@ static void handle_read_device_pk(void)
  * note: Read Hash Code command is valid, only if the Generate command was executed.
  */
 
-extern keycore_keys_hashcode_t keycore_sec_hashcode;
-
 static void handle_read_hashcode(void)
 {
-  if (!keycore_keys_hashcode_isvalid()) { /* The Hashcode is not valid */
+  if (!keycore_hashcode_isvalid()) { /* The Hashcode is not valid */
     /* Sends a NACK byte and end of command. */
-    ksendc(NACK);        
+    __write_byte(NACK);        
     return;
   } 
   else {
     /* Else, send an ACK byte.
      * The command shall be executed. */
-    ksendc(ACK);
+    __write_byte(ACK);
   } 
 
-  ksendc(sizeof(keycore_sec_hashcode) - 1);  /* Send the length of hash code bytes. */
-  ksendw((uint8_t *) &keycore_sec_hashcode,  /* Send Hash code */ 
-          sizeof(keycore_sec_hashcode));
+  __write_byte(sizeof(sec_hash) - 1);               /* Send the length of hash code bytes. */
+  __write((uint8_t *) sec_hash, sizeof(sec_hash));  /* Send Hash code */ 
   
   /* Send an ACK bytes 
    * and end of Read Hash Code command. */
-  ksendc(ACK);                                    
+  __write_byte(ACK);                                    
 }
 
 /*
@@ -162,30 +155,28 @@ static void handle_read_hashcode(void)
  * note: Read Security Monitor Public Key (or Read SM Public Key) command is valid, only if 
  *       the Generate command was executed.
  */
-
-extern const keycore_keys_pk_t keycore_sec_pub_key;
-
+ 
 static void handle_read_sec_pk(void)
 {
-    if (!keycore_keys_sec_key_isvalid()) { 
+    if (!keycore_seckeys_isvalid()) { 
       /* The Security Monitor Public Key is not valid. */
       /* Send a NACK byte and end of Read Security Monitor Public Key. */
-      ksendc(NACK);
+      __write_byte(NACK);
       return;
     } 
     else {
       /* Else, send an ACK byte. 
        * The command shall be executed.*/
-      ksendc(ACK);
+      __write_byte(ACK);
     }
 
-    ksendc(sizeof(keycore_sec_pub_key) - 1);   /* Send the length of security monitor PK. */
-    ksendw((uint8_t *) &keycore_sec_pub_key,   /* Send Security Monitor PK. */
-            sizeof(keycore_sec_pub_key));
+    __write_byte(sizeof(sec_pub_key) - 1);   /* Send the length of security monitor PK. */
+    __write((uint8_t *) sec_pub_key,         /* Send Security Monitor PK. */
+            sizeof(sec_pub_key));
     
     /* Send an ACK byte and 
      * end of Read SM Public Key. */
-    ksendc(ACK);                                    
+    __write_byte(ACK);                                    
 }
 
 /*
@@ -197,29 +188,26 @@ static void handle_read_sec_pk(void)
  * note: Read Security Monitor Signature (or Read SM Public Key) command is valid, only if 
  *       the Generate command was executed.
  */
-extern const keycore_keys_signature_t keycore_sec_signature;
-
 static void handle_read_sec_signature(void)
 {
-    if (!keycore_keys_sec_key_isvalid()) {
+    if (!keycore_seckeys_isvalid()) {
         /* The Security Monitor Public Key is not valid. */
         /* Send a NACK byte and end of Read Security Monitor Signature. */
-        ksendc(NACK);
+        __write_byte(NACK);
         return;
     }
     else {
         /* Else, send an ACK byte. 
          * The command shall be executed.*/
-        ksendc(ACK);
+        __write_byte(ACK);
     }
     
-    ksendc(sizeof(keycore_sec_signature) - 1);   /* Send the length of security monitor PK. */
-    ksendw((uint8_t *) &keycore_sec_signature,     /* Send Security Monitor PK. */
-            sizeof(keycore_sec_signature));
+    __write_byte(sizeof(sec_signa) - 1);   /* Send the length of security monitor PK. */
+    __write((uint8_t *) sec_signa, sizeof(sec_signa));  /* Send Security Monitor PK. */
     
     /* Send an ACK byte and 
      * end of Read SM Public Key. */
-    ksendc(ACK);             
+    __write_byte(ACK);             
 }
  
 
@@ -239,11 +227,11 @@ static void handle_generate(void)
 {
   /* Send an ACK byte and 
    * start of generate process. */
-  ksendc(ACK);
+  __write_byte(ACK);
   
   /* Receives the length of payload bytes (4 bytes)
    * and a checksum (1 byte). */
-  kreceivew(buffer, 4 + 1 /* 4 bytes length and 1 byte checksum */);
+  __read(buffer, 4 + 1 /* 4 bytes length and 1 byte checksum */);
 
   /* Checksum received data. */
   uint8_t selfcheck = 0x00;
@@ -253,13 +241,13 @@ static void handle_generate(void)
   if (selfcheck != buffer[4]) {
     /* Send an NACK byte 
      * and end of Generate command.*/
-    ksendc(NACK);
+    __write_byte(NACK);
     return;
   }
   else {
     /* Else, Send a ACK byte.
      * The Application Payload shall be received. */
-    ksendc(ACK);
+    __write_byte(ACK);
   }
     
   uint32_t payload_len = GET32(buffer[0], buffer[1],  \
@@ -269,11 +257,11 @@ static void handle_generate(void)
    * (not included: segment N, type, checksum). */
   uint32_t received_bytes_counter = 0;  
   
-  keycore_keys_payload_init();
+  keycore_payload_init();
   
   while (received_bytes_counter < payload_len) {
-    uint8_t segment_len = kreceivec();    /* Receives the length of segment. */
-    kreceivew(buffer, segment_len + 1);   /* Receives segment bytes. */
+    uint8_t segment_len = __read_byte();    /* Receives the length of segment. */
+    __read(buffer, segment_len + 1);   /* Receives segment bytes. */
     
     /* Checksum received data. */
     selfcheck = segment_len;
@@ -284,12 +272,12 @@ static void handle_generate(void)
     if (selfcheck != buffer[segment_len]) { /* Checksum is not correct. */
       /* Send an NACK byte 
        * and end of Generate command. */
-      ksendc(NACK);
+      __write_byte(NACK);
       return;
     }
        
     keycore_data_segment_t *seg = (keycore_data_segment_t *) buffer;
-    keycore_keys_payload_append(seg->data, segment_len - 1);
+    keycore_payload_append(seg->data, segment_len - 1);
     received_bytes_counter += segment_len - 1;
 
     if (seg->type == KEYCORE_SEG_START || 
@@ -297,28 +285,28 @@ static void handle_generate(void)
       // Nothing.
     }
     else if (seg->type == KEYCORE_SEG_LAST) {
-      ksendc(ACK);
+      __write_byte(ACK);
       break;
     }
     else {
-      ksendc(NACK);
+      __write_byte(NACK);
       return;
     }
     
-    ksendc(ACK);
+    __write_byte(ACK);
   }
     
   if (received_bytes_counter != payload_len) { 
     /* The size of payload is not correct. */
-    ksendc(NACK);
+    __write_byte(NACK);
     return;
   }
   
-  keycore_keys_payload_final();
+  keycore_payload_final();
   
   /* Send an ACK and
    * end of Generate command. */
-  ksendc(ACK);
+  __write_byte(ACK);
 }
 
 /*
@@ -329,20 +317,20 @@ static void handle_generate(void)
 
 static void handle_sec_sign(void)
 {
-  if (!keycore_keys_sec_key_isvalid()) { 
+  if (!keycore_seckeys_isvalid()) { 
     /* The Security Monitor Public and Private Key is not valid */
-    ksendc(NACK);
+    __write_byte(NACK);
     return;
   }
   else {
     /* Else, Send an ACK byte. */
     /* The command shall be received. */
-    ksendc(ACK);
+    __write_byte(ACK);
   }
 
   /* Waits for receiving the size of message (4 byte) and
    * checksum (1 byte).*/
-  kreceivew(buffer, 4 + 1);
+  __read(buffer, 4 + 1);
 
   uint8_t selfcheck = 0x00;
   for (int i = 0; i < 4; i++) {
@@ -350,13 +338,13 @@ static void handle_sec_sign(void)
   }
 
   if (selfcheck != buffer[4]) { /* Checksum is not correct.*/ 
-    ksendc(NACK);
+    __write_byte(NACK);
     return;
   }
   else {
     /* Else, send an ACK byte. 
      * The message shall be received. */
-    ksendc(ACK);
+    __write_byte(ACK);
   }
 
   uint32_t msg_len = GET32(buffer[0], buffer[1], buffer[2], buffer[3]);
@@ -367,8 +355,8 @@ static void handle_sec_sign(void)
   keycore_signature_msg_init();
 
   while (received_bytes_counter < msg_len) {
-    uint8_t segment_len = kreceivec();      /* Receives the length of segment. */
-    kreceivew(buffer, segment_len + 1);     /* Receives segment bytes. */
+    uint8_t segment_len = __read_byte();      /* Receives the length of segment. */
+    __read(buffer, segment_len + 1);     /* Receives segment bytes. */
 
     /* Checksum received data. */
     selfcheck = segment_len;
@@ -379,7 +367,7 @@ static void handle_sec_sign(void)
     if (selfcheck != buffer[segment_len]) { /* Checksum is not correct. */
       /* Send an NACK byte 
        * and end of Generate command. */
-      ksendc(NACK);
+      __write_byte(NACK);
       return;
     }
 
@@ -392,35 +380,35 @@ static void handle_sec_sign(void)
       // Nothing.
     }
     else if (seg->type == KEYCORE_SEG_LAST) {
-      ksendc(ACK);
+      __write_byte(ACK);
       break;
     }
     else {
-      ksendc(NACK);
+      __write_byte(NACK);
       return;
     }
 
-    ksendc(ACK);	
+    __write_byte(ACK);	
   }
 
   if (received_bytes_counter != msg_len) { 
     /* The size of payload is not correct. */
-    ksendc(NACK);
+    __write_byte(NACK);
     return;
   }
   else {
-    ksendc(ACK);
+    __write_byte(ACK);
   }
   
-  keycore_keys_signature_t signature;
-  keycore_signature_msg_final(&signature);
+  uint8_t signature[SEC_SIGNA_SIZE];
+  keycore_signature_msg_final(&signature[0]);
 
-  ksendc(sizeof(signature) - 1);
-  ksendw((uint8_t *) &signature, sizeof(signature));
+  __write_byte(sizeof(signature) - 1);
+  __write((uint8_t *) &signature[0], sizeof(signature));
 
   /* Send an ACK and
    * end of Generate command. */
-  ksendc(ACK);
+  __write_byte(ACK);
 }
 
 /*******************************************************************************
@@ -436,7 +424,7 @@ void keycore_cmd_handler(void)
     
     while (1)
     {
-        kreceivew(buffer, 1);
+        __read(buffer, 1);
         for (int i = 1; i < seq_max; i++)  {
             seq[i-1] = seq[i];
         }   
@@ -457,47 +445,37 @@ void keycore_cmd_handler(void)
 handler:       
         switch (code) {
         case KEYCORE_CMD_GET:
-			      debug("INFO: GET_COMMAND is called\n");
             handle_get();
             break;
         case KEYCORE_CMD_GET_VERSION:
-			      debug("INFO: GET_VERSION_COMMAND is called\n");
             handle_get_version();
             break;
         case KEYCORE_CMD_READ_PRO_STATUS:
-			      debug("INFO: READ_PRO_STATUS_COMMAND is called\n");
             handle_read_protection_status();
             break;
         case KEYCORE_CMD_GET_ID:
-			      debug("INFO: GET_ID_COMMAND is called\n");
             handle_get_id();
             break;
         case KEYCORE_CMD_READ_DEVICE_PK:
-			      debug("INFO: READ_DEV_PUBLIC_KEY is called\n");
             handle_read_device_pk();
             break;
         case KEYCORE_CMD_READ_SEC_HASHCODE:
-			      debug("INFO: READ_SEC_HASH_COMMAND is called\n");
             handle_read_hashcode();
             break;
         case KEYCORE_CMD_READ_SEC_PK:
-			      debug("INFO: READ_SEC_PUBLIC_KEY_COMMAND is called\n");
             handle_read_sec_pk();
             break;
         case KEYCORE_CMD_READ_SEC_SIGNATURE:
-			      debug("INFO: READ_SEC_SIGNATURE_COMMAND is called\n");
             handle_read_sec_signature();
             break;
         case KEYCORE_CMD_GENERATE:
-			      debug("INFO: GENERATE_COMMAND is called\n");
             handle_generate();
             break;
         case KEYCORE_CMD_SEC_SIGN:
-			      debug("INFO: SEC_SIGN_COMMAND is called\n");
             handle_sec_sign();
             break;
         default:
-            ksendc(NACK);
+            __write_byte(NACK);
         }
     }
 }

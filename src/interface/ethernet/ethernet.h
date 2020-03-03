@@ -9,26 +9,16 @@
  *
  * This model is distributed in the hope that it will be useful.
  */
-
-#ifndef CONFIG_H
-#define CONFIG_H
-
-#include <stdio.h>
-
-#ifndef __packed
-#define __packed	__attribute__((packed))
-#endif  // __packed
-
-#ifndef __weak
-#define __weak		__attribute__((weak))
-#endif  // __weak
-
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(COND, MSG)	typedef char static_assertion_##MSG[(!!(COND))*2-1]
-#endif  // _STATIC_ASSERT
-
-#ifndef STATIC_ASSERT
-#define STATIC_ASSERT(COND)		_STATIC_ASSERT(COND, __LINE__);
-#endif  // STATIC_ASSERT
-
-#endif // CONFIG_H
+ 
+ #ifndef _KEYCORE_INF_ETHERNET_H_
+ #define _KEYCORE_INF_ETHERNET_H_
+ 
+ #include <stdint.h>
+ #include <stddef.h>
+ 
+ int socket_open();
+ ssize_t socket_read(uint8_t *buffer, uint16_t len);
+ ssize_t socket_send(const uint8_t *buffer, uint16_t len);
+ 
+ #endif  //  _KEYCORE_INF_ETHERNET_H_
+ 

@@ -20,6 +20,17 @@
 #include "cmd_handler.h"
 #include "config.h"
 
+static void print_hex(const uint8_t *stream, uint16_t size)
+{
+  for (int i = 0; i < size; i += 8) {
+    printf("           ");
+    for (int j = 0; j < 8; j++) {
+      printf("0x%2x ", stream[i + j]);
+    }
+    printf("\r\n");
+  }
+}
+
 /*
  * The Get command.
  *
@@ -307,6 +318,13 @@ static void handle_generate(void)
   /* Send an ACK and
    * end of Generate command. */
   __write_byte(ACK);
+  
+  msg_debug("Sercurity Monitor Hash Code:\r\n");
+  print_hex(sec_hash, sizeof(sec_hash));
+  msg_debug("Sercurity Monitor Public Key:\r\n");
+  print_hex(sec_pub_key, sizeof(sec_pub_key));
+  msg_debug("Security Monitor Signature: \r\n");
+  print_hex(sec_signa, sizeof(sec_signa));
 }
 
 /*
@@ -445,33 +463,43 @@ void keycore_cmd_handler(void)
 handler:       
         switch (code) {
         case KEYCORE_CMD_GET:
+            msg_info("Get command is run\r\n");
             handle_get();
             break;
         case KEYCORE_CMD_GET_VERSION:
+            msg_info("Get version is run");
             handle_get_version();
             break;
         case KEYCORE_CMD_READ_PRO_STATUS:
+            msg_info("Read protection status command is run\r\n");
             handle_read_protection_status();
             break;
         case KEYCORE_CMD_GET_ID:
+            msg_info("Get id command is run\r\n");
             handle_get_id();
             break;
         case KEYCORE_CMD_READ_DEVICE_PK:
+            msg_info("Read manufacture public key is run\r\n");
             handle_read_device_pk();
             break;
         case KEYCORE_CMD_READ_SEC_HASHCODE:
+            msg_info("Read secuirity monitor hash code command is run\r\n");
             handle_read_hashcode();
             break;
         case KEYCORE_CMD_READ_SEC_PK:
+            msg_info("Read secuirity monitor public key command is run\r\n");
             handle_read_sec_pk();
             break;
         case KEYCORE_CMD_READ_SEC_SIGNATURE:
+            msg_info("Read secuirity monitor signature command is run\r\n");
             handle_read_sec_signature();
             break;
         case KEYCORE_CMD_GENERATE:
+            msg_info("Build command is run\r\n");
             handle_generate();
             break;
         case KEYCORE_CMD_SEC_SIGN:
+            msg_info("Sign command is run\r\n");
             handle_sec_sign();
             break;
         default:

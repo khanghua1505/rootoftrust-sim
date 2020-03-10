@@ -31,8 +31,9 @@ void log_write(const uint8_t *buffer, size_t len)
 static void print_key(const uint8_t *pk, uint16_t key_size)
 {
   for (int i = 0; i < key_size; i += 8) {
+    printf("           ");
     for (int j = 0; j < 8; j++) {
-      printf("%2x ", pk[i]);
+      printf("0x%2x ", pk[i + j]);
     }
     printf("\r\n");
   }
@@ -76,10 +77,10 @@ int main(int argc, char **argv)
     exit(-1);
   }
   
-  fread(dev_pub_key, sizeof(dev_pub_key), 1, fd);
-  fread(dev_prv_key, sizeof(dev_prv_key), 1, fd);
+  fread(dev_pub_key, sizeof(dev_pub_key[0]), sizeof(dev_pub_key)/sizeof(dev_pub_key[0]), fd);
+  fread(dev_prv_key, sizeof(dev_prv_key[0]), sizeof(dev_pub_key)/sizeof(dev_pub_key[0]), fd);
   
-  printf("Device Public Key: \r\n");
+  msg_info("Manufacture Public Key: \r\n");
   print_key(dev_pub_key, sizeof(dev_pub_key));
   
   keycore_cmd_handler();

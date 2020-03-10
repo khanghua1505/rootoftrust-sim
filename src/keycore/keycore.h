@@ -30,7 +30,7 @@ extern "C" {
 
 extern uint8_t dev_pub_key[32];
 extern uint8_t dev_prv_key[64];
-extern uint8_t sec_pub_key[64];
+extern uint8_t sec_pub_key[32];
 extern uint8_t sec_prv_key[64];
 extern uint8_t sec_hash[64];
 extern uint8_t sec_signa[64];

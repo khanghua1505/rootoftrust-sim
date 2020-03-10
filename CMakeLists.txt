@@ -1,3 +1,7 @@
+################################################################################
+# BASIC SETUP
+################################################################################
+
 cmake_minimum_required(VERSION 3.10)
 project(rootoftrust_sim C)
 
@@ -27,20 +31,54 @@ else()
     message(FATAL_ERROR "${INTERFACE} is not supported. The program only support: Serial or Ethernet")
 endif()
 
-find_package(Yder REQUIRED)
-list(APPEND INCDIRS "${YDER_INCLUDE_DIR}")
-list(APPEND LIBS "${YDER_LIBRARY}")
+################################################################################
+# BUILD SHA3 LIBRARY
+################################################################################
 
-set(SHA3_SRC "${ROOTDIR}/lib/sha3/sha3.c")
+set(SHA3_SOURCE_DIR    ${ROOTDIR}/lib/sha3)
+set(SHA3_SOURCE_FILES  ${SHA3_SOURCE_DIR}/sha3.c)
 
-set(ED25519_SRC "lib/ed25519/fe.c")
-list(APPEND ED25519_SRC "lib/ed25519/fe.c")
-list(APPEND ED25519_SRC "lib/ed25519/ge.c")
-list(APPEND ED25519_SRC "lib/ed25519/fe.c")
-list(APPEND ED25519_SRC "lib/ed25519/keypair.c")
-list(APPEND ED25519_SRC "lib/ed25519/sc.c")
-list(APPEND ED25519_SRC "lib/ed25519/sign.c")
-list(APPEND ED25519_SRC "lib/ed25519/verify.c")
+add_library(libsha3 ${SHA3_SOURCE_FILES})
+
+target_include_directories(libsha3 PUBLIC ${SHA3_SOURCE_DIR})
+
+################################################################################
+# BUILD SHA3 LIBRARY
+################################################################################
+
+set(ED25519_SOURCE_DIR    ${ROOTDIR}/lib/ed25519)
+set(ED25519_SOURCE_FILES  "")
+
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/fe.c)
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/ge.c)
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/keypair.c)
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/sc.c)
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/sign.c)
+list(APPEND ED25519_SOURCE_FILES  ${ED25519_SOURCE_DIR}/verify.c)
+
+add_library(libed25519 ${ED25519_SOURCE_FILES})
+
+target_include_directories(libed25519 PUBLIC ${ED25519_SOURCE_DIR})
+
+################################################################################
+# GENERATE KEY PROGRAM
+################################################################################
+
+set(GENERATEKEY_SOURCE_DIR    ${ROOTDIR}/tool/generate_key)
+set(GENERATEKEY_SOURCE_FILES  ${GENERATEKEY_SOURCE_DIR}/main.c)
+
+add_executable(genrate_key  ${GENERATEKEY_SOURCE_FILES})
+target_link_libraries(genrate_key libsha3 libed25519)
+
+add_custom_command(
+    TARGET genrate_key
+    POST_BUILD
+    COMMAND ./genrate_key -O binary ${PROJECT_NAME} ${PROJECT_NAME}.bin
+)
+
+################################################################################
+# BUILDTRUST SIMULATION PROGRAM
+################################################################################
 
 list(APPEND SOURCES "src/cmd_handler.c")
 list(APPEND SOURCES "src/keycore/keycore.c")
@@ -57,13 +95,12 @@ list(APPEND INCDIRS "${ROOTDIR}/src/keycore")
 list(APPEND INCDIRS "${ROOTDIR}/lib/sha3")
 list(APPEND INCDIRS "${ROOTDIR}/lib/ed25519")
 
-add_definitions(${DEFINITIONS})
+message(STATUS "Build interface: ${INTERFACE}")
 
+add_definitions(${DEFINITIONS})
 include_directories(${INCDIRS})
 
-add_executable(${PROJECT_NAME}  ${SOURCES})
+add_executable(rootoftrust_sim  ${SOURCES})
+target_link_libraries(rootoftrust_sim libsha3 libed25519)
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
-
-message(STATUS "Build interface: ${INTERFACE}")
 

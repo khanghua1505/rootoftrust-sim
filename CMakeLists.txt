@@ -67,14 +67,8 @@ target_include_directories(libed25519 PUBLIC ${ED25519_SOURCE_DIR})
 set(GENERATEKEY_SOURCE_DIR    ${ROOTDIR}/tool/generate_key)
 set(GENERATEKEY_SOURCE_FILES  ${GENERATEKEY_SOURCE_DIR}/main.c)
 
-add_executable(genrate_key  ${GENERATEKEY_SOURCE_FILES})
-target_link_libraries(genrate_key libsha3 libed25519)
-
-add_custom_command(
-    TARGET genrate_key
-    POST_BUILD
-    COMMAND ./genrate_key -O binary ${PROJECT_NAME} ${PROJECT_NAME}.bin
-)
+add_executable(generate_key  ${GENERATEKEY_SOURCE_FILES})
+target_link_libraries(generate_key libsha3 libed25519)
 
 ################################################################################
 # BUILDTRUST SIMULATION PROGRAM
@@ -102,5 +96,18 @@ include_directories(${INCDIRS})
 
 add_executable(rootoftrust_sim  ${SOURCES})
 target_link_libraries(rootoftrust_sim libsha3 libed25519)
+
+if (WIN32) 
+    set(COPY_CMD    "copy")
+else()
+    set(COPY_CMD    "cp")
+endif()
+
+add_custom_command(
+    TARGET rootoftrust_sim
+    POST_BUILD
+    COMMAND ${COPY_CMD} ${ROOTDIR}/tool/run.sh ${CMAKE_BINARY_DIR}
+)
+
 
 
